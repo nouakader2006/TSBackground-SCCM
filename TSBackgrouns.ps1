@@ -117,7 +117,7 @@ foreach ($e in $Config.Steps) {
 
 # Discreet diagnostic button at the bottom right
 $LblDebugHint = New-Object System.Windows.Forms.Label
-$LblDebugHint.Text      = "v2.0 • Ctrl+Shift+D : Console Diagnostic"
+$LblDebugHint.Text      = "v2.1 • Ctrl+Shift+D : Console Diagnostic"
 $LblDebugHint.Font      = New-Object System.Drawing.Font("Segoe UI", 8.5)
 $LblDebugHint.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextSecondary)
 $LblDebugHint.Location  = New-Object System.Drawing.Point(35, ($ScreenH - 35))
@@ -146,13 +146,24 @@ if (-not [string]::IsNullOrEmpty($Config.LogoPath) -and (Test-Path $LogoFullPath
     $Form.Controls.Add($PicLogo)
     $CurrentY += 75
 } else {
+    $LblCompany = New-Object System.Windows.Forms.Label
+    $LblCompany.Text      = $Config.CompanyName
+    $LblCompany.Font      = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+    $LblCompany.ForeColor = [System.Drawing.Color]::Silver
+    $LblCompany.Location  = New-Object System.Drawing.Point($LeftMarginX, $CurrentY)
+    $LblCompany.Size      = New-Object System.Drawing.Size(800, 24)
+    $Form.Controls.Add($LblCompany)
+
+    $CurrentY += 22
+
     $LblBrand = New-Object System.Windows.Forms.Label
-    $LblBrand.Text      = $Config.BrandName
+    $LblBrand.Text      = $Config.DepartmentName
     $LblBrand.Font      = New-Object System.Drawing.Font("Segoe UI", 16, [System.Drawing.FontStyle]::Bold)
     $LblBrand.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.AccentColor)
     $LblBrand.Location  = New-Object System.Drawing.Point($LeftMarginX, $CurrentY)
-    $LblBrand.Size      = New-Object System.Drawing.Size(600, 34)
+    $LblBrand.Size      = New-Object System.Drawing.Size(800, 34)
     $Form.Controls.Add($LblBrand)
+
     $CurrentY += 42
 }
 
@@ -200,12 +211,13 @@ $CurrentY += 48
 # Carte d'informations système
 $InfoPanel = New-Object System.Windows.Forms.Panel
 $InfoPanel.Location  = New-Object System.Drawing.Point($LeftMarginX, $CurrentY)
-$InfoPanel.Size      = New-Object System.Drawing.Size(560, 200)
+$InfoPanel.Size      = New-Object System.Drawing.Size(560, 280)
+$InfoPanel.Height = 280
 $InfoPanel.BackColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.CardBackground)
 $Form.Controls.Add($InfoPanel)
 
 $TxtPCName = New-Object System.Windows.Forms.Label
-$TxtPCName.Text      = "Computer Name : En attente..."
+$TxtPCName.Text      = "Computer Name : On hold..."
 $TxtPCName.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
 $TxtPCName.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
 $TxtPCName.Location  = New-Object System.Drawing.Point(22, 18)
@@ -229,20 +241,47 @@ $TxtModel.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.T
 $TxtModel.Location  = New-Object System.Drawing.Point(22, 82)
 $TxtModel.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtModel)
+
+$TxtTS = New-Object System.Windows.Forms.Label
+$TxtTS.Text      = "Task Sequence : Detecting..."
+$TxtTS.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
+$TxtTS.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
+$TxtTS.Location  = New-Object System.Drawing.Point(22, 114)
+$TxtTS.Size      = New-Object System.Drawing.Size(510, 26)
+$InfoPanel.Controls.Add($TxtTS)
+
 $TxtIP = New-Object System.Windows.Forms.Label
 $TxtIP.Text      = "IP Address : Detection..."
 $TxtIP.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
 $TxtIP.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
-$TxtIP.Location  = New-Object System.Drawing.Point(22, 114)
+$TxtIP.Location  = New-Object System.Drawing.Point(22, 146)
 $TxtIP.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtIP)
+
+$TxtMAC = New-Object System.Windows.Forms.Label
+$TxtMAC.Text      = "MAC Address : Detecting..."
+$TxtMAC.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
+$TxtMAC.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
+$TxtMAC.Location  = New-Object System.Drawing.Point(22, 178)
+$TxtMAC.Size      = New-Object System.Drawing.Size(510, 26)
+$InfoPanel.Controls.Add($TxtMAC)
+
 $TxtTimer = New-Object System.Windows.Forms.Label
 $TxtTimer.Text      = "Time elapsed : 00:00:00"
 $TxtTimer.Font      = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
 $TxtTimer.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.AccentColor)
-$TxtTimer.Location  = New-Object System.Drawing.Point(22, 146)
+$TxtTimer.Location  = New-Object System.Drawing.Point(22, 210)
 $TxtTimer.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtTimer)
+
+$LblStep = New-Object System.Windows.Forms.Label
+$LblStep.Visible = $false
+$LblStep.Text = "Step 0 of 0"
+$LblStep.Font = New-Object System.Drawing.Font("Segoe UI",11)
+$LblStep.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
+$LblStep.Location = New-Object System.Drawing.Point(22,242)
+$LblStep.Size = New-Object System.Drawing.Size(510,26)
+$InfoPanel.Controls.Add($LblStep)
 
 #==============================================================================
 #DYNAMIC REFRESH LOOP (EVERY 2 SECONDS)
@@ -268,35 +307,86 @@ $UpdateUI = {
     # 3. Reading SCCM task sequence variables
     try {
         $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
+        $TSPackageName = $TSEnv.Value("_SMSTSPackageName")
         $CurrentAction = $TSEnv.Value("_SMSTSCurrentActionName")
         $PCName        = $TSEnv.Value("OSDComputerName")
         $StepIndex     = [int]$TSEnv.Value("_SMSTSNextInstructionPointer")
         $TotalSteps    = [int]$TSEnv.Value("_SMSTSInstructionTableSize")
-
-        if ($CurrentAction) {
-            $NewAction = "Étape en cours : $CurrentAction"
-            if ($TxtActionActuelle.Text -ne $NewAction) { $TxtActionActuelle.Text = $NewAction }
+            if ($TSPackageName) {
+        $NewTS = "Task Sequence : $TSPackageName"
+        if ($TxtTS.Text -ne $NewTS) {
+            $TxtTS.Text = $NewTS
         }
-        if ($PCName) {
-            $NewPC = "Nom du poste : $PCName"
-            if ($TxtPCName.Text -ne $NewPC) { $TxtPCName.Text = $NewPC }
-        }
+    }
 
-        if ($TotalSteps -gt 0 -and $StepIndex -gt 0) {
-            $Pct = [Math]::Min(100, [Math]::Round(($StepIndex / $TotalSteps) * 100))
-            $NewWidth = [int](($Pct / 100) * 560)
-            if ($ProgressFill.Width -ne $NewWidth) { $ProgressFill.Width = $NewWidth }
+    if ($CurrentAction) {
+        $NewAction = "Current Step : $CurrentAction"
+        if ($TxtActionActuelle.Text -ne $NewAction) {
+            $TxtActionActuelle.Text = $NewAction
         }
+    }
 
-        foreach ($id in ($ControlesEtapes.Keys | Sort-Object)) {
-            if ($CurrentAction -match $ControlesEtapes[$id].Keywords) {
-                if ($id -gt $script:EtapeCouranteMax) {
-                    $script:EtapeCouranteMax = $id
+    if ($PCName) {
+        $NewPC = "Computer Name : $PCName"
+        if ($TxtPCName.Text -ne $NewPC) {
+            $TxtPCName.Text = $NewPC
+        }
+    }
+
+       if ($TotalSteps -gt 0) {
+
+    $Pct = [Math]::Round(($StepIndex / $TotalSteps) * 100)
+
+    if ($Pct -lt 0)   { $Pct = 0 }
+    if ($Pct -gt 100) { $Pct = 100 }
+
+    $NewWidth = [int](($Pct / 100) * $ProgressBar.Width)
+
+    if ($ProgressFill.Width -ne $NewWidth) {
+        $ProgressFill.Width = $NewWidth
+    }
+
+    # Progression des étapes
+    $CurrentStepNumber = [Math]::Max(1, [Math]::Min($StepIndex + 1, $TotalSteps))
+
+    $NewStepInfo = "Deployment Progress : $Pct% ($CurrentStepNumber/$TotalSteps)"
+
+    if ($LblStep.Text -ne $NewStepInfo) {
+        $LblStep.Text = $NewStepInfo
+    }
+
+    $LblStep.Visible = $true
+}
+    else {
+        $LblStep.Visible = $false
+    }
+
+
+            # Step Counter
+            $CurrentStepNumber = [Math]::Max(1, [Math]::Min($StepIndex + 1, $TotalSteps))
+
+            $NewStepInfo = "Deployment Progress : $CurrentStepNumber / $TotalSteps"
+
+            if ($LblStep.Text -ne $NewStepInfo) {
+                $LblStep.Text = $NewStepInfo
+            }
+
+            $NewStatus = "$Pct% Complete ($CurrentStepNumber/$TotalSteps)"
+
+            if ($LblProgress.Text -ne $NewStatus) {
+                $LblProgress.Text = $NewStatus
+            }
+        
+
+            foreach ($id in ($ControlesEtapes.Keys | Sort-Object)) {
+                if ($CurrentAction -match $ControlesEtapes[$id].Keywords) {
+                    if ($id -gt $script:EtapeCouranteMax) {
+                        $script:EtapeCouranteMax = $id
+                    }
                 }
             }
-        }
     } catch {
-        $PreviewAction = "Mode prévisualisation hors séquence SCCM"
+        $PreviewAction = "Preview Mode - SCCM Task Sequence Not Detected"
         $PreviewPC     = "Computer Name : $env:COMPUTERNAME"
         if ($TxtActionActuelle.Text -ne $PreviewAction) { $TxtActionActuelle.Text = $PreviewAction }
         if ($TxtPCName.Text -ne $PreviewPC)             { $TxtPCName.Text = $PreviewPC }
@@ -305,12 +395,34 @@ $UpdateUI = {
 
     # 4. Update IPv4 address (WMI query only if not yet found)
     if (-not $script:CachedIP) {
-        $IP = (Get-CimInstance Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -ErrorAction SilentlyContinue | Select-Object -First 1).IPAddress | Where-Object { $_ -notmatch ":" } | Select-Object -First 1
-        if ($IP) {
-            $script:CachedIP = $IP
-            $TxtIP.Text = "IP Address : $IP"
-        }
+
+    $IP = (
+        Get-NetIPConfiguration |
+        Where-Object {
+            $_.IPv4Address -and
+            $_.IPv4DefaultGateway
+        } |
+        Select-Object -First 1
+    ).IPv4Address.IPAddress
+
+    if ($IP) {
+        $script:CachedIP = $IP
+        $TxtIP.Text = "IP Address : $IP"
     }
+}
+
+           $MACAddress = (
+            Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue |
+            Where-Object { $_.IPEnabled -eq $true } |
+            Select-Object -First 1
+        ).MACAddress
+
+        if ($MACAddress) {
+            $NewMAC = "MAC Address : $MACAddress"
+            if ($TxtMAC.Text -ne $NewMAC) {
+                $TxtMAC.Text = $NewMAC
+            }
+        }
 
     # 5. Visual update of the steps in the sidebar (only if a change occurs)
     foreach ($id in ($ControlesEtapes.Keys | Sort-Object)) {
