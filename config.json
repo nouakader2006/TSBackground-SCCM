@@ -1,0 +1,49 @@
+{
+  "BrandName": "KNOUACER IT",
+  "Title": "Déploiement Windows en cours",
+  "SubTitle": "Veuillez patienter pendant la configuration automatique de votre poste.",
+  "LogoPath": "logo.png",
+  "HideSCCMProgress": true,
+  "DebugPassword": "ChangeMe123!",
+  "Theme": {
+    "Background": "#0F172A",
+    "SidebarBackground": "#1E293B",
+    "CardBackground": "#1E293B",
+    "AccentColor": "#38BDF8",
+    "TextPrimary": "#FFFFFF",
+    "TextSecondary": "#94A3B8",
+    "StepPendingBg": "#0F172A",
+    "StepPendingText": "#64748B",
+    "StepActiveBg": "#0284C7",
+    "StepActiveText": "#FFFFFF",
+    "StepDoneBg": "#064E3B",
+    "StepDoneText": "#4ADE80"
+  },
+  "Steps": [
+    {
+      "Id": 1,
+      "Name": "Préparation && Partitionnement",
+      "Keywords": "Partition|Format|Pre-provision|Lancer UI|UI\\+\\+"
+    },
+    {
+      "Id": 2,
+      "Name": "Installation du Système",
+      "Keywords": "Apply Operating System|Appliquer le système|Driver|Pilotes|WIM"
+    },
+    {
+      "Id": 3,
+      "Name": "Configuration Réseau && Domaine",
+      "Keywords": "Network|Settings|ConfigMgr|Configurer Windows|Domain"
+    },
+    {
+      "Id": 4,
+      "Name": "Installation des Applications",
+      "Keywords": "Application|Package|Office|Adobe|Notepad|Royal|Software"
+    },
+    {
+      "Id": 5,
+      "Name": "Finalisation du déploiement",
+      "Keywords": "Restart|Redémarrer|Final|Cleanup|BitLocker"
+    }
+  ]
+}
