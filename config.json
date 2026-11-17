@@ -1,7 +1,7 @@
 {
   "BrandName": "KNOUACER IT",
-  "Title": "Déploiement Windows en cours",
-  "SubTitle": "Veuillez patienter pendant la configuration automatique de votre poste.",
+  "Title": "Windows Deployment in Progress",
+  "SubTitle": "Please wait while your device is being configured automatically.",
   "LogoPath": "logo.png",
   "HideSCCMProgress": true,
   "DebugPassword": "ChangeMe123!",
@@ -22,27 +22,27 @@
   "Steps": [
     {
       "Id": 1,
-      "Name": "Préparation && Partitionnement",
+      "Name": "Preparation & Partitioning",
       "Keywords": "Partition|Format|Pre-provision|Lancer UI|UI\\+\\+"
     },
     {
       "Id": 2,
-      "Name": "Installation du Système",
+      "Name": "Operating System Installation",
       "Keywords": "Apply Operating System|Appliquer le système|Driver|Pilotes|WIM"
     },
     {
       "Id": 3,
-      "Name": "Configuration Réseau && Domaine",
+      "Name": "Network & Domain Configuration",
       "Keywords": "Network|Settings|ConfigMgr|Configurer Windows|Domain"
     },
     {
       "Id": 4,
-      "Name": "Installation des Applications",
+      "Name": "Application Installation",
       "Keywords": "Application|Package|Office|Adobe|Notepad|Royal|Software"
     },
     {
       "Id": 5,
-      "Name": "Finalisation du déploiement",
+      "Name": "Deployment Finalization",
       "Keywords": "Restart|Redémarrer|Final|Cleanup|BitLocker"
     }
   ]

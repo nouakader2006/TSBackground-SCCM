@@ -33,7 +33,7 @@ public class Win32Window {
 "@
 Add-Type -TypeDefinition $Win32Code -ErrorAction SilentlyContinue
 
-# --- Chargement de la configuration JSON ---
+# --- Loading JSON configuration---
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $ScriptDir) { $ScriptDir = (Get-Location).Path }
 $ConfigFullPath = Join-Path $ScriptDir $ConfigFile
@@ -41,11 +41,11 @@ $ConfigFullPath = Join-Path $ScriptDir $ConfigFile
 if (Test-Path $ConfigFullPath) {
     $Config = Get-Content -Path $ConfigFullPath -Raw -Encoding UTF8 | ConvertFrom-Json
 } else {
-    Write-Warning "Fichier $ConfigFullPath introuvable. Utilisation des valeurs par défaut."
+    Write-Warning "File $ConfigFullPath not found. Using default values."
     exit 1
 }
 
-# --- Gestion du chronomètre persistant entre WinPE et Windows complet ---
+# --- Managing a persistent timer between WinPE and the full Windows environment ---
 $StartTime = Get-Date
 try {
     $TSEnvInit = New-Object -ComObject Microsoft.SMS.TSEnvironment
@@ -56,11 +56,10 @@ try {
         $StartTime = [DateTime]::Parse($SavedStart)
     }
 } catch {
-    # Mode hors séquence de tâches (test local)
+    #Out-of-sequence task mode (local test)
 }
 
-# --- Création de l'interface plein écran ---
-$Form = New-Object System.Windows.Forms.Form
+# --- Creating the full-screen interface ---
 $Form = New-Object System.Windows.Forms.Form
 $Form.GetType().GetProperty("DoubleBuffered", [System.Reflection.BindingFlags]"Instance,NonPublic").SetValue($Form, $true, $null)
 $Form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
@@ -75,7 +74,7 @@ $SidebarW = 440
 $LeftW    = $ScreenW - $SidebarW
 
 # ==============================================================================
-# BARRE LATÉRALE DROITE : SUIVI DES ÉTAPES
+# RIGHT SIDEBAR: STEP TRACKER
 # ==============================================================================
 $RightPanel = New-Object System.Windows.Forms.Panel
 $RightPanel.Location  = New-Object System.Drawing.Point($LeftW, 0)
@@ -88,7 +87,7 @@ $StartY = [int](($ScreenH - (60 + ($StepsCount * 74))) / 2)
 if ($StartY -lt 40) { $StartY = 40 }
 
 $LblStepsHeader = New-Object System.Windows.Forms.Label
-$LblStepsHeader.Text      = "ÉTAPES D'INSTALLATION"
+$LblStepsHeader.Text      = "INSTALLATION STEPS"
 $LblStepsHeader.Font      = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
 $LblStepsHeader.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextSecondary)
 $LblStepsHeader.Location  = New-Object System.Drawing.Point(35, $StartY)
@@ -116,7 +115,7 @@ foreach ($e in $Config.Steps) {
     $StepY += 72
 }
 
-# Bouton discret de diagnostic en bas à droite
+# Discreet diagnostic button at the bottom right
 $LblDebugHint = New-Object System.Windows.Forms.Label
 $LblDebugHint.Text      = "v2.0 • Ctrl+Shift+D : Console Diagnostic"
 $LblDebugHint.Font      = New-Object System.Drawing.Font("Segoe UI", 8.5)
@@ -127,7 +126,7 @@ $LblDebugHint.TextAlign = [System.Drawing.ContentAlignment]::MiddleRight
 $RightPanel.Controls.Add($LblDebugHint)
 
 # ==============================================================================
-# ZONE PRINCIPALE GAUCHE : LOGO, TITRE, PROGRESSION GLOBALE & INFOS SYSTÈME
+# MAIN LEFT AREA: LOGO, TITLE, OVERALL PROGRESS & SYSTEM INFO
 # ==============================================================================
 $LeftCenterY = [int](($ScreenH - 440) / 2)
 if ($LeftCenterY -lt 40) { $LeftCenterY = 40 }
@@ -190,7 +189,7 @@ $ProgressBg.Controls.Add($ProgressFill)
 $CurrentY += 22
 
 $TxtActionActuelle = New-Object System.Windows.Forms.Label
-$TxtActionActuelle.Text      = "Initialisation de la séquence..."
+$TxtActionActuelle.Text      = "Sequence initialization..."
 $TxtActionActuelle.Font      = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Regular)
 $TxtActionActuelle.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.AccentColor)
 $TxtActionActuelle.Location  = New-Object System.Drawing.Point($LeftMarginX, $CurrentY)
@@ -201,55 +200,64 @@ $CurrentY += 48
 # Carte d'informations système
 $InfoPanel = New-Object System.Windows.Forms.Panel
 $InfoPanel.Location  = New-Object System.Drawing.Point($LeftMarginX, $CurrentY)
-$InfoPanel.Size      = New-Object System.Drawing.Size(560, 165)
+$InfoPanel.Size      = New-Object System.Drawing.Size(560, 200)
 $InfoPanel.BackColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.CardBackground)
 $Form.Controls.Add($InfoPanel)
 
 $TxtPCName = New-Object System.Windows.Forms.Label
-$TxtPCName.Text      = "Nom du poste : En attente..."
+$TxtPCName.Text      = "Computer Name : En attente..."
 $TxtPCName.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
 $TxtPCName.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
 $TxtPCName.Location  = New-Object System.Drawing.Point(22, 18)
 $TxtPCName.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtPCName)
 
+$SerialNumber = (Get-CimInstance Win32_BIOS -ErrorAction SilentlyContinue).SerialNumber
+$TxtSerial = New-Object System.Windows.Forms.Label
+$TxtSerial.Text      = "Serial Number : $(if ($SerialNumber) { $SerialNumber } else { 'Detection...' })"
+$TxtSerial.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
+$TxtSerial.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
+$TxtSerial.Location  = New-Object System.Drawing.Point(22, 50)
+$TxtSerial.Size      = New-Object System.Drawing.Size(510, 26)
+$InfoPanel.Controls.Add($TxtSerial)
+
 $TxtModel = New-Object System.Windows.Forms.Label
-$ModelHW = (Get-WmiObject Win32_ComputerSystem -ErrorAction SilentlyContinue).Model
-$TxtModel.Text      = "Modèle matériel : $(if ($ModelHW) { $ModelHW } else { 'Détection...' })"
+$ModelHW = (Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).Model
+$TxtModel.Text      = "Hardware model : $(if ($ModelHW) { $ModelHW } else { 'Detection...' })"
 $TxtModel.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
 $TxtModel.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
-$TxtModel.Location  = New-Object System.Drawing.Point(22, 50)
+$TxtModel.Location  = New-Object System.Drawing.Point(22, 82)
 $TxtModel.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtModel)
 $TxtIP = New-Object System.Windows.Forms.Label
-$TxtIP.Text      = "Adresse IP : Détection..."
+$TxtIP.Text      = "IP Address : Detection..."
 $TxtIP.Font      = New-Object System.Drawing.Font("Segoe UI", 11)
 $TxtIP.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextPrimary)
-$TxtIP.Location  = New-Object System.Drawing.Point(22, 82)
+$TxtIP.Location  = New-Object System.Drawing.Point(22, 114)
 $TxtIP.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtIP)
 $TxtTimer = New-Object System.Windows.Forms.Label
-$TxtTimer.Text      = "Temps écoulé : 00:00:00"
+$TxtTimer.Text      = "Time elapsed : 00:00:00"
 $TxtTimer.Font      = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
 $TxtTimer.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.AccentColor)
-$TxtTimer.Location  = New-Object System.Drawing.Point(22, 118)
+$TxtTimer.Location  = New-Object System.Drawing.Point(22, 146)
 $TxtTimer.Size      = New-Object System.Drawing.Size(510, 26)
 $InfoPanel.Controls.Add($TxtTimer)
 
 #==============================================================================
-#BOUCLE DE RAFRAÎCHISSEMENT DYNAMIQUE (TOUTES LES 2 SECONDES)
+#DYNAMIC REFRESH LOOP (EVERY 2 SECONDS)
 #==============================================================================
 
 $script:EtapeCouranteMax = 1
 $script:CachedIP = $null
 
 $UpdateUI = {
-    # 1. Mise à jour du chronomètre (uniquement le texte du timer qui change chaque seconde)
+    # 1. Timer update (only the timer text, which changes every second)
     $Elapsed = (Get-Date) - $StartTime
-    $NewTimerText = "Temps écoulé : {0:hh\:mm\:ss}" -f $Elapsed
+    $NewTimerText = "Time elapsed : {0:hh\:mm\:ss}" -f $Elapsed
     if ($TxtTimer.Text -ne $NewTimerText) { $TxtTimer.Text = $NewTimerText }
 
-    # 2. Masquage optionnel de la fenêtre SCCM "Installation Progress"
+    # 2. Optional hiding of the SCCM "Installation Progress" window"
     if ($Config.HideSCCMProgress -eq $true) {
         $Hwnd = [Win32Window]::FindWindow($null, "Installation Progress")
         if ($Hwnd -ne [IntPtr]::Zero) {
@@ -257,7 +265,7 @@ $UpdateUI = {
         }
     }
 
-    # 3. Lecture des variables de séquence de tâches SCCM
+    # 3. Reading SCCM task sequence variables
     try {
         $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment
         $CurrentAction = $TSEnv.Value("_SMSTSCurrentActionName")
@@ -289,22 +297,22 @@ $UpdateUI = {
         }
     } catch {
         $PreviewAction = "Mode prévisualisation hors séquence SCCM"
-        $PreviewPC     = "Nom du poste : $env:COMPUTERNAME"
+        $PreviewPC     = "Computer Name : $env:COMPUTERNAME"
         if ($TxtActionActuelle.Text -ne $PreviewAction) { $TxtActionActuelle.Text = $PreviewAction }
         if ($TxtPCName.Text -ne $PreviewPC)             { $TxtPCName.Text = $PreviewPC }
         if ($ProgressFill.Width -ne 240)                { $ProgressFill.Width = 240 }
     }
 
-    # 4. Mise à jour de l'adresse IPv4 (requête WMI uniquement si pas encore trouvée)
+    # 4. Update IPv4 address (WMI query only if not yet found)
     if (-not $script:CachedIP) {
-        $IP = (Get-WmiObject Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -ErrorAction SilentlyContinue | Select-Object -First 1).IPAddress | Where-Object { $_ -notmatch ":" } | Select-Object -First 1
+        $IP = (Get-CimInstance Win32_NetworkAdapterConfiguration -Filter "IPEnabled=True" -ErrorAction SilentlyContinue | Select-Object -First 1).IPAddress | Where-Object { $_ -notmatch ":" } | Select-Object -First 1
         if ($IP) {
             $script:CachedIP = $IP
-            $TxtIP.Text = "Adresse IP : $IP"
+            $TxtIP.Text = "IP Address : $IP"
         }
     }
 
-    # 5. Mise à jour visuelle des étapes sur la barre latérale (uniquement si changement)
+    # 5. Visual update of the steps in the sidebar (only if a change occurs)
     foreach ($id in ($ControlesEtapes.Keys | Sort-Object)) {
         $Ctrl = $ControlesEtapes[$id]
         if ($id -lt $script:EtapeCouranteMax) {
@@ -332,7 +340,7 @@ $UpdateUI = {
     }
 }
 
-# Exécution immédiate à l'ouverture (évite l'écran vide pendant les 2 premières secondes)
+# Immediate execution upon opening (prevents a blank screen during the first 2 seconds)
 & $UpdateUI
 
 $Timer = New-Object System.Windows.Forms.Timer
@@ -341,7 +349,7 @@ $Timer.Add_Tick($UpdateUI)
 
 
 #==============================================================================
-#RACCOURCIS CLAVIER : ÉCHAP (TEST) & CTRL+SHIFT+D (CONSOLE DIAGNOSTIC)
+#KEYBOARD SHORTCUTS: ESC (TEST) & CTRL+SHIFT+D (DIAGNOSTIC CONSOLE)
 #==============================================================================
 
 $Form.Add_KeyDown({
@@ -350,11 +358,48 @@ $Form.Add_KeyDown({
         $Form.Close()
     }
     elseif ($_.Control -and $_.Shift -and $_.KeyCode -eq "D") {
-        $PwdInput = [Microsoft.VisualBasic.Interaction]::InputBox("Entrez le mot de passe administrateur pour ouvrir l'invite de commandes :", "Diagnostic OSD", "")
-        if ($PwdInput -eq $Config.DebugPassword) {
+
+    $PwdForm = New-Object System.Windows.Forms.Form
+    $PwdForm.Text = "Diagnostic OSD"
+    $PwdForm.Size = New-Object System.Drawing.Size(400,150)
+    $PwdForm.StartPosition = "CenterScreen"
+    $PwdForm.FormBorderStyle = "FixedDialog"
+    $PwdForm.MaximizeBox = $false
+    $PwdForm.MinimizeBox = $false
+    $PwdForm.TopMost = $true
+
+    $Lbl = New-Object System.Windows.Forms.Label
+    $Lbl.Text = "Enter the administrator password:"
+    $Lbl.Location = New-Object System.Drawing.Point(10,15)
+    $Lbl.Size = New-Object System.Drawing.Size(350,20)
+
+    $TxtPwd = New-Object System.Windows.Forms.TextBox
+    $TxtPwd.Location = New-Object System.Drawing.Point(10,45)
+    $TxtPwd.Size = New-Object System.Drawing.Size(360,25)
+    $TxtPwd.UseSystemPasswordChar = $true
+
+    $BtnOK = New-Object System.Windows.Forms.Button
+    $BtnOK.Text = "OK"
+    $BtnOK.Location = New-Object System.Drawing.Point(205,80)
+    $BtnOK.DialogResult = [System.Windows.Forms.DialogResult]::OK
+
+    $BtnCancel = New-Object System.Windows.Forms.Button
+    $BtnCancel.Text = "Cancel"
+    $BtnCancel.Location = New-Object System.Drawing.Point(290,80)
+    $BtnCancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+
+    $PwdForm.Controls.AddRange(@($Lbl,$TxtPwd,$BtnOK,$BtnCancel))
+    $PwdForm.AcceptButton = $BtnOK
+    $PwdForm.CancelButton = $BtnCancel
+
+    if ($PwdForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        if ($TxtPwd.Text -eq $Config.DebugPassword) {
             Start-Process "cmd.exe"
         }
     }
+    $PwdForm.Dispose()
+}
+
 })
 
 $Form.Add_FormClosing({
@@ -365,6 +410,3 @@ $Form.Add_FormClosing({
 $Timer.Start()
 [void]$Form.ShowDialog()
 
-
-$Timer.Start()
-[void]$Form.ShowDialog()
