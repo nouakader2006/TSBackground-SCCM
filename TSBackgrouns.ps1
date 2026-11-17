@@ -6,7 +6,7 @@
     real-time task sequence variables, persistent timer across WinPE/FullOS reboots,
     automatic SCCM progress window hiding, and a password-protected debug console (Ctrl+Shift+D).
 .AUTHOR
-    Knouacer IT
+    Abdelkader Nouacer IT
 .VERSION
     2.0.0
 #>
