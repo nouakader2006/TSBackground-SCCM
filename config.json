@@ -1,10 +1,10 @@
 {
-  "CompanyName": "Your Organization",
+  "CompanyName": "Sidra Tech",
   "DepartmentName": "IT Department",
   "Title": "Windows Deployment in Progress",
   "SubTitle": "Please wait while your device is being configured automatically.",
   "LogoPath": "logo.png",
-  "HideSCCMProgress": true,
+  "HideSCCMProgress": false,
   "DebugPassword": "ChangeMe123!",
   "Theme": {
     "Background": "#0F172A",
@@ -24,27 +24,27 @@
     {
       "Id": 1,
       "Name": "Preparation & Partitioning",
-      "Keywords": "Partition|Format|Pre-provision|Lancer UI|UI\\+\\+"
+      "Keywords": "Partition|Format and|Pre-provision|UI++"
     },
     {
       "Id": 2,
       "Name": "Operating System Installation",
-      "Keywords": "Apply Operating System|Appliquer le système|Driver|Pilotes|WIM"
+      "Keywords": "Apply Operating System|Apply Driver|Auto Apply|WIM"
     },
     {
       "Id": 3,
       "Name": "Network & Domain Configuration",
-      "Keywords": "Network|Settings|ConfigMgr|Configurer Windows|Domain"
+      "Keywords": "Setup Windows and ConfigMgr|Join Domain|Domain"
     },
     {
       "Id": 4,
       "Name": "Application Installation",
-      "Keywords": "Application|Package|Office|Adobe|Notepad|Royal|Software"
+      "Keywords": "Install Application|Install Package|Install Software|Office|Adobe|Notepad|Royal"
     },
     {
       "Id": 5,
       "Name": "Deployment Finalization",
-      "Keywords": "Restart|Redémarrer|Final|Cleanup|BitLocker"
+      "Keywords": "Restart in Windows|Finalize|Final|Cleanup|Enable BitLocker"
     }
   ]
 }
