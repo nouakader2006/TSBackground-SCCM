@@ -8,7 +8,7 @@
 .AUTHOR
     Abdelkader Nouacer IT
 .VERSION
-    2.3.0
+    2.5.0
 #>
 
 param(
@@ -45,6 +45,11 @@ if (Test-Path $ConfigFullPath) {
     exit 1
 }
 
+# --- Single instance guard (a second launch in the same phase exits silently) ---
+$MutexCreated = $false
+$script:InstanceMutex = New-Object System.Threading.Mutex($true, "Global\TSBackground-OSD", [ref]$MutexCreated)
+if (-not $MutexCreated) { exit 0 }
+
 # --- Managing a persistent timer between WinPE and the full Windows environment ---
 $StartTime = Get-Date
 try {
@@ -76,13 +81,15 @@ $SideInnerW = $SidebarW - 70
 $ContentW   = [Math]::Min(560, $LeftW - 80)
 $InnerW     = $ContentW - 50
 $TitleSize  = 28
+$Gfx = [System.Drawing.Graphics]::FromHwnd([IntPtr]::Zero)
 while ($TitleSize -gt 14) {
     $TestFont = New-Object System.Drawing.Font("Segoe UI", $TitleSize, [System.Drawing.FontStyle]::Regular)
-    $TitleW   = [System.Windows.Forms.TextRenderer]::MeasureText([string]$Config.Title, $TestFont).Width
+    $TitleW   = $Gfx.MeasureString([string]$Config.Title, $TestFont).Width
     $TestFont.Dispose()
-    if ($TitleW -le $ContentW) { break }
+    if ($TitleW -le ($ContentW - 10)) { break }
     $TitleSize--
 }
+$Gfx.Dispose()
 
 # ==============================================================================
 # RIGHT SIDEBAR: STEP TRACKER
@@ -130,7 +137,7 @@ foreach ($e in $Config.Steps) {
 
 # Discreet diagnostic hint at the bottom right
 $LblDebugHint = New-Object System.Windows.Forms.Label
-$LblDebugHint.Text      = "v2.3 • Ctrl+Shift+D : Console Diagnostic"
+$LblDebugHint.Text      = "v2.5 • Ctrl+Shift+D : Console Diagnostic"
 $LblDebugHint.Font      = New-Object System.Drawing.Font("Segoe UI", 8.5)
 $LblDebugHint.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextSecondary)
 $LblDebugHint.Location  = New-Object System.Drawing.Point(35, ($ScreenH - 35))
@@ -308,6 +315,7 @@ $script:TSEnvObj = $null
 $script:TSConnected = $false
 $script:LastAction = $null
 $script:UIUnregistered = $false
+$script:LastTSError = $null
 $SortedIds = @($StepControls.Keys | Sort-Object)
 
 # Restore the step reached before a reboot (WinPE -> Full OS)
@@ -337,7 +345,7 @@ function Write-Log {
     param([string]$Message)
     try { Add-Content -Path $LogFile -Value ("{0} {1}" -f (Get-Date -Format "HH:mm:ss"), $Message) -ErrorAction SilentlyContinue } catch { }
 }
-Write-Log ("START v2.3 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4}" -f $PSVersionTable.PSVersion, [Threading.Thread]::CurrentThread.GetApartmentState(), $ScriptDir, $SortedIds.Count, ($null -ne ('Win32Window' -as [type])))
+Write-Log ("START v2.5 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4} Is64Bit={5} User={6} Session={7}" -f $PSVersionTable.PSVersion, [Threading.Thread]::CurrentThread.GetApartmentState(), $ScriptDir, $SortedIds.Count, ($null -ne ('Win32Window' -as [type])), [Environment]::Is64BitProcess, [Environment]::UserName, (Get-Process -Id $PID).SessionId)
 
 # ==============================================================================
 # DYNAMIC REFRESH LOOP (EVERY 1 SECOND)
@@ -396,8 +404,14 @@ $UpdateUI = {
         $PCName        = $TSEnv.Value("OSDComputerName")
         $StepRaw       = $TSEnv.Value("_SMSTSNextInstructionPointer")
         $TotalRaw      = $TSEnv.Value("_SMSTSInstructionTableSize")
+        if (-not $script:TSConnected) { Write-Log "TS environment connected" }
         $script:TSConnected = $true
     } catch {
+        $ErrMsg = $_.Exception.Message
+        if ($ErrMsg -ne $script:LastTSError) {
+            $script:LastTSError = $ErrMsg
+            Write-Log "TS environment unavailable: $ErrMsg"
+        }
         # Transient failure: drop the object, retry on next tick
         $script:TSEnvObj = $null
         $TSEnv = $null
@@ -433,11 +447,13 @@ $UpdateUI = {
 
         # Step detection (only moves forward, saved for the next reboot)
         if (-not [string]::IsNullOrWhiteSpace($CurrentAction)) {
+            # First step AFTER the current one whose keywords match the running action
             $Matched = $SortedIds | Where-Object {
-                Test-StepMatch -Action $CurrentAction -Keywords $StepControls[$_].Keywords
+                [int]$_ -gt $script:CurrentStepMax -and
+                (Test-StepMatch -Action $CurrentAction -Keywords $StepControls[$_].Keywords)
             } | Select-Object -First 1
 
-            if ($null -ne $Matched -and [int]$Matched -gt $script:CurrentStepMax) {
+            if ($null -ne $Matched) {
                 $script:CurrentStepMax = [int]$Matched
                 try { $TSEnv.Value("TSBackgroundCurrentStep") = [string]$script:CurrentStepMax } catch { }
             }
