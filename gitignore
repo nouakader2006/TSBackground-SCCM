@@ -1,0 +1,10 @@
+# Local configuration and secrets
+config.json
+
+# Microsoft binary, do not redistribute
+ServiceUI.exe
+
+# Logs and screenshots
+*.log
+*.png
+!logo.png
