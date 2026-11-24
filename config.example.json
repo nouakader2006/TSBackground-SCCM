@@ -1,0 +1,51 @@
+{
+  "CompanyName": "Your Company",
+  "DepartmentName": "IT Department",
+  "Title": "Windows Deployment in Progress",
+  "SubTitle": "Please wait while your device is being configured automatically.",
+  "LogoPath": "logo.png",
+  "HideSCCMProgress": false,
+  "AutoCloseOnCompletion": true,
+  "DebugPassword": "CHANGE_ME",
+  "Theme": {
+    "Background": "#0F172A",
+    "SidebarBackground": "#1E293B",
+    "CardBackground": "#1E293B",
+    "AccentColor": "#38BDF8",
+    "TextPrimary": "#FFFFFF",
+    "TextSecondary": "#94A3B8",
+    "StepPendingBg": "#0F172A",
+    "StepPendingText": "#64748B",
+    "StepActiveBg": "#0284C7",
+    "StepActiveText": "#FFFFFF",
+    "StepDoneBg": "#064E3B",
+    "StepDoneText": "#4ADE80"
+  },
+  "Steps": [
+    {
+      "Id": 1,
+      "Name": "Preparation & Partitioning",
+      "Keywords": "Partition|Format and|Pre-provision"
+    },
+    {
+      "Id": 2,
+      "Name": "Operating System Installation",
+      "Keywords": "Apply Operating System|Apply Driver|Auto Apply|WIM"
+    },
+    {
+      "Id": 3,
+      "Name": "Network & Domain Configuration",
+      "Keywords": "Setup Windows and Configuration Manager|Join Domain"
+    },
+    {
+      "Id": 4,
+      "Name": "Application Installation",
+      "Keywords": "Install Application|Install Package|Install Software"
+    },
+    {
+      "Id": 5,
+      "Name": "Deployment Finalization",
+      "Keywords": "Enable BitLocker|Finalize|Cleanup"
+    }
+  ]
+}
