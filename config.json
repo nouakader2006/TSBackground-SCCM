@@ -34,7 +34,7 @@
     {
       "Id": 3,
       "Name": "Network & Domain Configuration",
-      "Keywords": "Setup Windows and ConfigMgr|Join Domain|Domain"
+      "Keywords": "Setup Windows and Configuration Manager|Setup Windows and ConfigMgr|Join Domain"
     },
     {
       "Id": 4,
@@ -44,7 +44,7 @@
     {
       "Id": 5,
       "Name": "Deployment Finalization",
-      "Keywords": "Restart in Windows|Finalize|Final|Cleanup|Enable BitLocker"
+      "Keywords": "Enable BitLocker|Finalize|Cleanup"
     }
   ]
 }
