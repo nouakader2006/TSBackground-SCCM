@@ -8,7 +8,7 @@
 .AUTHOR
     Abdelkader Nouacer IT
 .VERSION
-    2.5.0
+    2.6.0
 #>
 
 param(
@@ -44,6 +44,10 @@ if (Test-Path $ConfigFullPath) {
     Write-Warning "File $ConfigFullPath not found."
     exit 1
 }
+
+# Close the UI automatically when the task sequence is over (default: true)
+$AutoClose = $true
+if ($null -ne $Config.AutoCloseOnCompletion) { $AutoClose = [bool]$Config.AutoCloseOnCompletion }
 
 # --- Single instance guard (a second launch in the same phase exits silently) ---
 $MutexCreated = $false
@@ -89,6 +93,16 @@ while ($TitleSize -gt 14) {
     if ($TitleW -le ($ContentW - 10)) { break }
     $TitleSize--
 }
+# Step label font: shrink until the longest step name fits on one line
+$StepFontSize = 12.0
+$LongestStep  = (@($Config.Steps | ForEach-Object { [string]$_.Name }) | Sort-Object Length -Descending | Select-Object -First 1)
+while ($StepFontSize -gt 8) {
+    $TestFont = New-Object System.Drawing.Font("Segoe UI", $StepFontSize, [System.Drawing.FontStyle]::Regular)
+    $StepW    = $Gfx.MeasureString("   ✔   $LongestStep", $TestFont).Width
+    $TestFont.Dispose()
+    if ($StepW -le ($SideInnerW - 8)) { break }
+    $StepFontSize -= 0.5
+}
 $Gfx.Dispose()
 
 # ==============================================================================
@@ -118,7 +132,7 @@ $StepY = $StartY + 50
 foreach ($e in $Config.Steps) {
     $Lbl = New-Object System.Windows.Forms.Label
     $Lbl.Text      = "   ○   $($e.Name)"
-    $Lbl.Font      = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Regular)
+    $Lbl.Font      = New-Object System.Drawing.Font("Segoe UI", $StepFontSize, [System.Drawing.FontStyle]::Regular)
     $Lbl.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.StepPendingText)
     $Lbl.BackColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.StepPendingBg)
     $Lbl.Location  = New-Object System.Drawing.Point(35, $StepY)
@@ -137,7 +151,7 @@ foreach ($e in $Config.Steps) {
 
 # Discreet diagnostic hint at the bottom right
 $LblDebugHint = New-Object System.Windows.Forms.Label
-$LblDebugHint.Text      = "v2.5 • Ctrl+Shift+D : Console Diagnostic"
+$LblDebugHint.Text      = "v2.6 • Ctrl+Shift+D : Console Diagnostic"
 $LblDebugHint.Font      = New-Object System.Drawing.Font("Segoe UI", 8.5)
 $LblDebugHint.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextSecondary)
 $LblDebugHint.Location  = New-Object System.Drawing.Point(35, ($ScreenH - 35))
@@ -316,6 +330,10 @@ $script:TSConnected = $false
 $script:LastAction = $null
 $script:UIUnregistered = $false
 $script:LastTSError = $null
+$script:TSFailCount = 0
+$script:Finished = $false
+$script:EndTime = $null
+$script:CloseAt = $null
 $SortedIds = @($StepControls.Keys | Sort-Object)
 
 # Restore the step reached before a reboot (WinPE -> Full OS)
@@ -345,7 +363,7 @@ function Write-Log {
     param([string]$Message)
     try { Add-Content -Path $LogFile -Value ("{0} {1}" -f (Get-Date -Format "HH:mm:ss"), $Message) -ErrorAction SilentlyContinue } catch { }
 }
-Write-Log ("START v2.5 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4} Is64Bit={5} User={6} Session={7}" -f $PSVersionTable.PSVersion, [Threading.Thread]::CurrentThread.GetApartmentState(), $ScriptDir, $SortedIds.Count, ($null -ne ('Win32Window' -as [type])), [Environment]::Is64BitProcess, [Environment]::UserName, (Get-Process -Id $PID).SessionId)
+Write-Log ("START v2.6 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4} Is64Bit={5} User={6} Session={7}" -f $PSVersionTable.PSVersion, [Threading.Thread]::CurrentThread.GetApartmentState(), $ScriptDir, $SortedIds.Count, ($null -ne ('Win32Window' -as [type])), [Environment]::Is64BitProcess, [Environment]::UserName, (Get-Process -Id $PID).SessionId)
 
 # ==============================================================================
 # DYNAMIC REFRESH LOOP (EVERY 1 SECOND)
@@ -353,7 +371,13 @@ Write-Log ("START v2.5 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4} Is64
 $UpdateUI = {
     try {
     # 1. Update elapsed timer
-    $Elapsed = (Get-Date) - $StartTime
+    $Now = if ($script:Finished -and $script:EndTime) { $script:EndTime } else { Get-Date }
+    $Elapsed = $Now - $StartTime
+    if ($script:CloseAt -and (Get-Date) -ge $script:CloseAt) {
+        $script:CloseAt = $null
+        Write-Log "Closing UI (deployment complete)"
+        $Form.Close()
+    }
     $NewTimerText = "Time elapsed : {0:hh\:mm\:ss}" -f $Elapsed
     if ($TxtTimer.Text -ne $NewTimerText) { $TxtTimer.Text = $NewTimerText }
 
@@ -404,8 +428,11 @@ $UpdateUI = {
         $PCName        = $TSEnv.Value("OSDComputerName")
         $StepRaw       = $TSEnv.Value("_SMSTSNextInstructionPointer")
         $TotalRaw      = $TSEnv.Value("_SMSTSInstructionTableSize")
+        if ([string]::IsNullOrWhiteSpace($TotalRaw)) { throw "TS variables are empty" }
         if (-not $script:TSConnected) { Write-Log "TS environment connected" }
         $script:TSConnected = $true
+        $script:TSFailCount = 0
+        if ($script:Finished) { $script:Finished = $false; $script:CloseAt = $null; $script:EndTime = $null }
     } catch {
         $ErrMsg = $_.Exception.Message
         if ($ErrMsg -ne $script:LastTSError) {
@@ -415,6 +442,15 @@ $UpdateUI = {
         # Transient failure: drop the object, retry on next tick
         $script:TSEnvObj = $null
         $TSEnv = $null
+        $script:TSFailCount++
+        if ($script:TSConnected -and -not $script:Finished -and $script:TSFailCount -ge 20) {
+            $script:Finished       = $true
+            $script:EndTime        = Get-Date
+            $script:CurrentStepMax = [int]$SortedIds[-1] + 1
+            $TxtCurrentAction.Text = "Deployment complete"
+            Write-Log "TS environment gone for 20 ticks: deployment complete (AutoClose=$AutoClose)"
+            if ($AutoClose) { $script:CloseAt = (Get-Date).AddSeconds(5) }
+        }
         if (-not $script:TSConnected) {
             $PreviewAction = "Preview Mode - SCCM Task Sequence Not Detected"
             if ($TxtCurrentAction.Text -ne $PreviewAction) { $TxtCurrentAction.Text = $PreviewAction }
@@ -509,7 +545,7 @@ $Form.Add_KeyDown({
     }
     elseif ($e.Control -and $e.Shift -and $e.KeyCode -eq [System.Windows.Forms.Keys]::D) {
         $PwdInput = [Microsoft.VisualBasic.Interaction]::InputBox("Enter administrator password to open Command Prompt:", "OSD Diagnostic", "")
-        if ($PwdInput -eq $Config.DebugPassword) {
+        if (-not [string]::IsNullOrEmpty($Config.DebugPassword) -and $PwdInput -eq $Config.DebugPassword) {
             Start-Process "cmd.exe"
         }
     }
