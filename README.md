@@ -140,5 +140,4 @@ It contains the version, bitness, account and session, every action seen with it
 Abdelkader Nouacer IT
 
 ## License
-
-Add a license of your choice (for example MIT) in a `LICENSE` file before publishing.
+MIT
