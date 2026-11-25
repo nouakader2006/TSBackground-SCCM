@@ -5,6 +5,7 @@
   "SubTitle": "Please wait while your device is being configured automatically.",
   "LogoPath": "logo.png",
   "HideSCCMProgress": false,
+  "AutoCloseOnCompletion": true,
   "DebugPassword": "ChangeMe123!",
   "Theme": {
     "Background": "#0F172A",
