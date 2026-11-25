@@ -8,7 +8,7 @@
 .AUTHOR
     Abdelkader Nouacer IT
 .VERSION
-    2.6.0
+    2.6.1
 #>
 
 param(
@@ -18,6 +18,12 @@ param(
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName Microsoft.VisualBasic
+
+# Symbols are built from code points so this script stays pure ASCII (no encoding issues)
+$IconDone    = [string][char]0x2714
+$IconActive  = [string][char]0x25B6
+$IconPending = [string][char]0x25CB
+$Bullet      = [string][char]0x2022
 
 # --- Win32 API to cleanly hide the standard SCCM "Installation Progress" window ---
 $Win32Code = @"
@@ -98,7 +104,7 @@ $StepFontSize = 12.0
 $LongestStep  = (@($Config.Steps | ForEach-Object { [string]$_.Name }) | Sort-Object Length -Descending | Select-Object -First 1)
 while ($StepFontSize -gt 8) {
     $TestFont = New-Object System.Drawing.Font("Segoe UI", $StepFontSize, [System.Drawing.FontStyle]::Regular)
-    $StepW    = $Gfx.MeasureString("   ✔   $LongestStep", $TestFont).Width
+    $StepW    = $Gfx.MeasureString("   $IconDone   $LongestStep", $TestFont).Width
     $TestFont.Dispose()
     if ($StepW -le ($SideInnerW - 8)) { break }
     $StepFontSize -= 0.5
@@ -131,7 +137,7 @@ $StepControls = @{}
 $StepY = $StartY + 50
 foreach ($e in $Config.Steps) {
     $Lbl = New-Object System.Windows.Forms.Label
-    $Lbl.Text      = "   ○   $($e.Name)"
+    $Lbl.Text      = "   $IconPending   $($e.Name)"
     $Lbl.Font      = New-Object System.Drawing.Font("Segoe UI", $StepFontSize, [System.Drawing.FontStyle]::Regular)
     $Lbl.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.StepPendingText)
     $Lbl.BackColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.StepPendingBg)
@@ -151,7 +157,7 @@ foreach ($e in $Config.Steps) {
 
 # Discreet diagnostic hint at the bottom right
 $LblDebugHint = New-Object System.Windows.Forms.Label
-$LblDebugHint.Text      = "v2.6 • Ctrl+Shift+D : Console Diagnostic"
+$LblDebugHint.Text      = "v2.6.1 $Bullet Ctrl+Shift+D : Console Diagnostic"
 $LblDebugHint.Font      = New-Object System.Drawing.Font("Segoe UI", 8.5)
 $LblDebugHint.ForeColor = [System.Drawing.ColorTranslator]::FromHtml($Config.Theme.TextSecondary)
 $LblDebugHint.Location  = New-Object System.Drawing.Point(35, ($ScreenH - 35))
@@ -363,7 +369,7 @@ function Write-Log {
     param([string]$Message)
     try { Add-Content -Path $LogFile -Value ("{0} {1}" -f (Get-Date -Format "HH:mm:ss"), $Message) -ErrorAction SilentlyContinue } catch { }
 }
-Write-Log ("START v2.6 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4} Is64Bit={5} User={6} Session={7}" -f $PSVersionTable.PSVersion, [Threading.Thread]::CurrentThread.GetApartmentState(), $ScriptDir, $SortedIds.Count, ($null -ne ('Win32Window' -as [type])), [Environment]::Is64BitProcess, [Environment]::UserName, (Get-Process -Id $PID).SessionId)
+Write-Log ("START v2.6.1 PS={0} Apartment={1} Dir={2} Steps={3} Win32Type={4} Is64Bit={5} User={6} Session={7}" -f $PSVersionTable.PSVersion, [Threading.Thread]::CurrentThread.GetApartmentState(), $ScriptDir, $SortedIds.Count, ($null -ne ('Win32Window' -as [type])), [Environment]::Is64BitProcess, [Environment]::UserName, (Get-Process -Id $PID).SessionId)
 
 # ==============================================================================
 # DYNAMIC REFRESH LOOP (EVERY 1 SECOND)
@@ -516,11 +522,11 @@ $UpdateUI = {
     foreach ($id in $SortedIds) {
         $Ctrl = $StepControls[$id]
         if ([int]$id -lt $script:CurrentStepMax) {
-            $Icon = "✔"; $Fg = $Config.Theme.StepDoneText;    $Bg = $Config.Theme.StepDoneBg
+            $Icon = $IconDone; $Fg = $Config.Theme.StepDoneText;    $Bg = $Config.Theme.StepDoneBg
         } elseif ([int]$id -eq $script:CurrentStepMax) {
-            $Icon = "▶"; $Fg = $Config.Theme.StepActiveText;  $Bg = $Config.Theme.StepActiveBg
+            $Icon = $IconActive; $Fg = $Config.Theme.StepActiveText;  $Bg = $Config.Theme.StepActiveBg
         } else {
-            $Icon = "○"; $Fg = $Config.Theme.StepPendingText; $Bg = $Config.Theme.StepPendingBg
+            $Icon = $IconPending; $Fg = $Config.Theme.StepPendingText; $Bg = $Config.Theme.StepPendingBg
         }
         $NewText = "   $Icon   $($Ctrl.Name)"
         if ($Ctrl.Label.Text -ne $NewText) {
