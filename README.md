@@ -7,6 +7,7 @@ first boot of the full OS.
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue)
 ![Platform](https://img.shields.io/badge/SCCM%20%2F%20MECM-WinPE%20%26%20Full%20OS-0078D4)
+https://github.com/nouakader2006/TSBackground-SCCM/blob/main/ScreenShoot/TS.jpg?raw=true
 
 TSBackground replaces the default "Installation Progress" window with a clean, branded screen that shows the big overall percentage, the current phase, live device and network information, and a vertical step timeline. It is a single `.ps1` file plus a JSON configuration, with no external dependency.
 
