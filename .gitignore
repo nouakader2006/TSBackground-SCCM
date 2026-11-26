@@ -1,10 +1,39 @@
-# Local configuration and secrets
+# ==========================================
+# Local Configuration & Secrets
+# ==========================================
+# Ignore personal config (keep only config.example.json)
 config.json
+*.local.json
+*.secret.*
 
-# Microsoft binary, do not redistribute
+# ==========================================
+# Third-Party Binaries (Microsoft MDT / ADK)
+# ==========================================
+# Avoid redistributing ServiceUI.exe under the MIT license
 ServiceUI.exe
+ServiceUI*.exe
 
-# Logs and screenshots
+# ==========================================
+# Deployment Logs & Temporary Files
+# ==========================================
 *.log
-*.png
-!logo.png
+smsts*.log
+TSBackground*.log
+*.tmp
+*.bak
+
+# ==========================================
+# OS & IDE Files (Windows / VS Code / ISE)
+# ==========================================
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.vs/
+*.code-workspace
+
+# ==========================================
+# Personal Folders & Documents
+# ==========================================
+My Resume/
+
