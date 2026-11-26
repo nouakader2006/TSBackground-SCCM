@@ -69,7 +69,7 @@ After every change, **update the distribution points** and wait for the *Success
 During the full OS phase, task sequence steps run as SYSTEM in session 0, so a window started directly is not visible.
 `ServiceUI.exe` starts the script in the session of `TSProgressUI.exe`, which is the visible one.
 
-- It is a Microsoft binary shipped with the Microsoft Deployment Toolkit (`Templates\Distribution\Tools\x64\ServiceUI.exe`). **This repository does include it.**
+- It is a Microsoft binary shipped with the Microsoft Deployment Toolkit (`Templates\Distribution\Tools\x64\ServiceUI.exe`). **This repository does not include it.**
 - MDT was retired by Microsoft on January 6, 2026, so its download may no longer be available. Use a copy you already have.
 - Use the **x64** version. A 32-bit `ServiceUI` starts the 32-bit PowerShell.
 - Check the file before using it, since it runs as SYSTEM:
