@@ -16,7 +16,7 @@ first boot of the full OS.
 - Optional hiding of the standard "Installation Progress" window.
 - **Closes automatically** when the task sequence is over (optional).
 - Password-protected diagnostic console (`Ctrl+Shift+D`).
-- Diagnostic log: `%SystemRoot%\Temp\TSBackground-OSD.log`.
+- Diagnostic log: `%SystemRoot%\Temp\TSBackground.log`.
 - Layout adapts to the screen resolution (WinPE often runs at a low resolution).
 
 ## Requirements
@@ -29,13 +29,13 @@ first boot of the full OS.
 
 | File | Purpose |
 |---|---|
-| `TSBackground-OSD.ps1` | The script. Keep it saved as **UTF-8 with BOM**. |
+| `TSBackground.ps1` | The script. Keep it saved as **UTF-8 with BOM**. |
 | `config.example.json` | Example configuration. Copy it to `config.json` and edit it. |
 | `logo.png` (optional) | Logo displayed top-left. If missing, the company and department names are shown as text. |
 
 ## Installation
 
-1. Create a folder and copy `TSBackground-OSD.ps1`, your `config.json`, an optional `logo.png` and `ServiceUI.exe` (x64) into it.
+1. Create a folder and copy `TSBackground.ps1`, your `config.json`, an optional `logo.png` and `ServiceUI.exe` (x64) into it.
 2. In the console, create a **package** from that folder (*This package contains source files*, no program) and distribute it to your distribution points.
 3. Add **two "Run Command Line" steps** to your task sequence, both using this package (a step can only use one package, so every file must be in it).
 
@@ -44,7 +44,7 @@ first boot of the full OS.
 Place it in *Install Operating System*, right after *Restart in Windows PE*:
 
 ```
-cmd.exe /c start "" powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File TSBackground-OSD.ps1
+cmd.exe /c start "" powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File TSBackground.ps1
 ```
 
 ### Step 2: full OS
@@ -52,7 +52,7 @@ cmd.exe /c start "" powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -
 Place it **after** *Setup Windows and Configuration Manager* (everything before that step still runs in WinPE):
 
 ```
-cmd.exe /c start "" ServiceUI.exe -process:TSProgressUI.exe %SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File TSBackground-OSD.ps1
+cmd.exe /c start "" ServiceUI.exe -process:TSProgressUI.exe %SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File TSBackground.ps1
 ```
 
 Recommended options for both steps:
@@ -107,10 +107,10 @@ The status must be `Valid` and the signer `Microsoft Corporation`.
 
 ## Diagnostics
 
-The log is written to `%SystemRoot%\Temp\TSBackground-OSD.log` (`X:\Windows\Temp` in WinPE, `C:\Windows\Temp` in the full OS):
+The log is written to `%SystemRoot%\Temp\TSBackground.log` (`X:\Windows\Temp` in WinPE, `C:\Windows\Temp` in the full OS):
 
 ```
-type X:\Windows\Temp\TSBackground-OSD.log
+type X:\Windows\Temp\TSBackground.log
 ```
 
 It contains the version, bitness, account and session, every action seen with its progress, errors per section,
