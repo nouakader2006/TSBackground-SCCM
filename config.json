@@ -1,11 +1,10 @@
 {
-  "CompanyName": "Sidra Tech",
+  "CompanyName": "Your Campany",
   "DepartmentName": "IT Department",
   "Title": "Windows Deployment in Progress",
   "SubTitle": "Please wait while your device is being configured automatically.",
   "LogoPath": "logo.png",
   "HideSCCMProgress": false,
-  "AutoCloseOnCompletion": true,
   "DebugPassword": "ChangeMe123!",
   "Theme": {
     "Background": "#0F172A",
@@ -22,30 +21,10 @@
     "StepDoneText": "#4ADE80"
   },
   "Steps": [
-    {
-      "Id": 1,
-      "Name": "Preparation & Partitioning",
-      "Keywords": "Partition|Format and|Pre-provision|UI++"
-    },
-    {
-      "Id": 2,
-      "Name": "Operating System Installation",
-      "Keywords": "Apply Operating System|Apply Driver|Auto Apply|WIM"
-    },
-    {
-      "Id": 3,
-      "Name": "Network & Domain Configuration",
-      "Keywords": "Setup Windows and Configuration Manager|Setup Windows and ConfigMgr|Join Domain"
-    },
-    {
-      "Id": 4,
-      "Name": "Application Installation",
-      "Keywords": "Install Application|Install Package|Install Software|Office|Adobe|Notepad|Royal"
-    },
-    {
-      "Id": 5,
-      "Name": "Deployment Finalization",
-      "Keywords": "Enable BitLocker|Finalize|Cleanup"
-    }
-  ]
+    { "Id": 1, "Name": "Preparation & Partitioning",      "ShortName": "Preparation",      "Keywords": "Partition|Format|Restart in Windows PE" },
+    { "Id": 2, "Name": "Operating System Installation",  "ShortName": "Operating system", "Keywords": "Apply Operating System|Apply Data Image" },
+    { "Id": 3, "Name": "Network & Domain Configuration", "ShortName": "Network",          "Keywords": "Apply Windows Settings|Apply Network Settings|Apply Device Drivers|Auto Apply Drivers|Setup Windows and Configuration Manager" },
+    { "Id": 4, "Name": "Application Installation",       "ShortName": "Applications",     "Keywords": "Install Application|Install Software|Install Package" },
+    { "Id": 5, "Name": "Deployment Finalization",        "ShortName": "Finalization",     "Keywords": "Finalize|Cleanup|Enable BitLocker|Restart Computer" }
+]
 }
